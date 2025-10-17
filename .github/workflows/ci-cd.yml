@@ -25,6 +25,19 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8
+        run: |
+          flake8 --max-line-length=88 > flake8_report.txt || true
+
+      - name: Upload flake8 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flake8-report
+          path: flake8_report.txt
+
       - name: Run Bandit SAST Scan
         run: |
           pip install bandit jq
