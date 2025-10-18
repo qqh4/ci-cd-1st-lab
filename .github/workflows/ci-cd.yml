@@ -43,7 +43,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install bandit
           sudo apt-get update -y && sudo apt-get install -y jq || true
-          # Анализируем весь код без фильтров, чтобы results заполнился
           bandit -r . -f json -o bandit_results.json || true
 
       - name: Annotate Bandit findings in GitHub Actions
@@ -51,7 +50,7 @@ jobs:
         run: |
           if [ -f bandit_results.json ]; then
             echo "📄 Generating inline annotations from Bandit results..."
-            jq -r '.results[] | "::warning file=\(.filename),line=\(.line_number)::[\(.issue_severity)] \(.issue_text)"' bandit_results.json
+            jq -r '.results[] | "::warning file=\(.filename),line=\(.line_number)::[\(.issue_severity)] \(.issue_text)"' bandit_results.json || true
           else
             echo "⚠️ Bandit results not found."
           fi
@@ -66,8 +65,15 @@ jobs:
         id: bandit-check
         run: |
           if [ -f bandit_results.json ]; then
-            if jq -e '.results[] | select(.issue_confidence == "HIGH" and .issue_severity == "HIGH")' bandit_results.json; then
-              echo "Bandit found critical vulnerabilities! Failing the pipeline."
+            if jq -e '.results[] | select(.issue_confidence == "HIGH" and .issue_severity == "HIGH")' bandit_results.json > /dev/null; then
+              echo "❌ Bandit found critical vulnerabilities! Failing the pipeline."
+              exit 1
+            else
+              echo "✅ No critical HIGH+HIGH vulnerabilities found by Bandit."
+            fi
+          else
+            echo "⚠️ Bandit report not found. Assuming no issues."
+          fi
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
