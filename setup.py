@@ -8,6 +8,6 @@ setup(
         "Flask>=3.1.2"
     ],
     description="Simple demo project for CI/CD pipeline with SAST",
-    author="Your Name",
+    author="qqh4",
     python_requires=">=3.8",
 )
